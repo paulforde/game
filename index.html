@@ -150,10 +150,12 @@ LOOKALIKE_GROUPS.forEach(g => g.forEach(c => { (GROUPS_BY_CODE[c] = GROUPS_BY_CO
 const LOOKALIKE_CHANCE = 0.35;
 const LENGTH_OPTIONS = [15, 20, 25, 30];
 const TIME_OPTIONS = [0, 5, 10, 15]; // 0 = Off
+const CHOICE_OPTIONS = [3, 4, 5, "random"];
 
 // ----- state -----
 let roundLength = 30;
 let timeLimit = 0;       // seconds, 0 = no timer
+let numChoices = 3;      // 3, 4, 5, or "random"
 let round = [], idx = 0, score = 0, locked = false, timerId = null;
 
 function shuffle(arr) {
@@ -165,18 +167,20 @@ function shuffle(arr) {
   return a;
 }
 
-function buildRound(length) {
+function buildRound(length, choices) {
   const picks = shuffle(COUNTRIES).slice(0, length);
   return picks.map(correct => {
+    const total = choices === "random" ? (3 + Math.floor(Math.random() * 3)) : choices;
+    const decoyCount = total - 1;
     let decoys = [];
     const groups = GROUPS_BY_CODE[correct.code];
     if (groups && Math.random() < LOOKALIKE_CHANCE) {
       const group = groups[Math.floor(Math.random() * groups.length)];
-      decoys = shuffle(COUNTRIES.filter(c => c.code !== correct.code && group.includes(c.code))).slice(0, 2);
+      decoys = shuffle(COUNTRIES.filter(c => c.code !== correct.code && group.includes(c.code))).slice(0, decoyCount);
     }
-    if (decoys.length < 2) {
+    if (decoys.length < decoyCount) {
       const used = new Set([correct.code, ...decoys.map(d => d.code)]);
-      decoys = decoys.concat(shuffle(COUNTRIES.filter(c => !used.has(c.code))).slice(0, 2 - decoys.length));
+      decoys = decoys.concat(shuffle(COUNTRIES.filter(c => !used.has(c.code))).slice(0, decoyCount - decoys.length));
     }
     return { correct, options: shuffle([correct, ...decoys]) };
   });
@@ -225,9 +229,11 @@ function renderStart() {
     '<div class="card">' +
       '<div class="big-emoji">🌍</div>' +
       '<h1 style="font-size:32px;font-weight:800;">Flag Quiz Challenge</h1>' +
-      '<p class="intro">Pick your settings, then test your geography. Three choices per flag.</p>' +
+      '<p class="intro">Pick your settings, then test your geography.</p>' +
       '<div class="seg-label">Number of flags</div>' +
       '<div class="seg" id="lengthSeg"></div>' +
+      '<div class="seg-label">Choices per flag</div>' +
+      '<div class="seg" id="choiceSeg"></div>' +
       '<div class="seg-label">Time per flag</div>' +
       '<div class="seg" id="timeSeg"></div>' +
       '<button class="btn" id="startBtn">Start Round</button>' +
@@ -244,6 +250,19 @@ function renderStart() {
       b.classList.add("active");
     };
     lengthSeg.appendChild(b);
+  });
+
+  const choiceSeg = document.getElementById("choiceSeg");
+  CHOICE_OPTIONS.forEach(c => {
+    const b = document.createElement("button");
+    b.textContent = c === "random" ? "Random" : c;
+    if (c === numChoices) b.classList.add("active");
+    b.onclick = () => {
+      numChoices = c;
+      choiceSeg.querySelectorAll("button").forEach(x => x.classList.remove("active"));
+      b.classList.add("active");
+    };
+    choiceSeg.appendChild(b);
   });
 
   const timeSeg = document.getElementById("timeSeg");
@@ -263,7 +282,7 @@ function renderStart() {
 }
 
 function startRound() {
-  round = buildRound(roundLength); idx = 0; score = 0; locked = false;
+  round = buildRound(roundLength, numChoices); idx = 0; score = 0; locked = false;
   renderQuestion();
 }
 
