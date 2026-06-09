@@ -55,7 +55,10 @@
   .seg button.active { background: #3b82f6; border-color: #3b82f6; color: #fff; }
   .big-emoji { font-size: 64px; margin-bottom: 8px; }
   .final-score { font-size: 28px; font-weight: 800; color: #0f172a; margin: 0 0 4px; }
-  .rank { font-size: 20px; font-weight: 600; color: #3b82f6; margin: 0 0 28px; }
+  .rank { font-size: 20px; font-weight: 600; color: #3b82f6; margin: 0 0 18px; }
+  .best-line { font-size: 14px; font-weight: 700; color: #64748b; margin: 14px 0 0; min-height: 18px; }
+  .newbest { font-size: 15px; font-weight: 800; color: #059669; margin: 14px 0 0; }
+  .reset-link { font-size: 12px; color: #94a3b8; margin: 18px 0 0; cursor: pointer; text-decoration: underline; }
   .btn {
     width: 100%; padding: 16px; border-radius: 14px; border: none; background: #3b82f6;
     color: #fff; font-size: 18px; font-weight: 700; cursor: pointer;
@@ -149,14 +152,36 @@ LOOKALIKE_GROUPS.forEach(g => g.forEach(c => { (GROUPS_BY_CODE[c] = GROUPS_BY_CO
 
 const LOOKALIKE_CHANCE = 0.35;
 const LENGTH_OPTIONS = [15, 20, 25, 30];
-const TIME_OPTIONS = [0, 5, 10, 15]; // 0 = Off
 const CHOICE_OPTIONS = [3, 4, 5, "random"];
+const TIME_OPTIONS = [0, 5, 10, 15]; // 0 = Off
+const STORE_KEY = "flagquiz_highscores";
 
 // ----- state -----
 let roundLength = 30;
-let timeLimit = 0;       // seconds, 0 = no timer
 let numChoices = 3;      // 3, 4, 5, or "random"
+let timeLimit = 0;       // seconds, 0 = no timer
 let round = [], idx = 0, score = 0, locked = false, timerId = null;
+
+// ----- high score storage (per settings combo) -----
+function bestKey() {
+  return roundLength + "|" + (numChoices === "random" ? "R" : numChoices) + "|" + timeLimit;
+}
+function loadScores() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; }
+  catch (e) { return {}; }
+}
+function getBest(key) { return loadScores()[key] || null; }
+function recordScore(key, sc, total) {
+  const all = loadScores();
+  const prev = all[key];
+  if (!prev || sc > prev.score) {
+    all[key] = { score: sc, total: total };
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(all)); } catch (e) {}
+  }
+}
+function resetScores() {
+  try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+}
 
 function shuffle(arr) {
   const a = arr.slice();
@@ -186,8 +211,8 @@ function buildRound(length, choices) {
   });
 }
 
-function getRank(score, length) {
-  const p = score / length;
+function getRank(sc, length) {
+  const p = sc / length;
   if (p === 1) return { title: "Flawless! Geography Legend", emoji: "🏆" };
   if (p >= 0.9) return { title: "Geography Whiz", emoji: "🌟" };
   if (p >= 0.75) return { title: "Globe Trotter", emoji: "✈️" };
@@ -222,7 +247,28 @@ function makeFlag(code) {
 
 const app = document.getElementById("app");
 
-// ----- start screen with selectors -----
+function buildSeg(container, options, currentVal, labelFn, onSelect) {
+  options.forEach(opt => {
+    const b = document.createElement("button");
+    b.textContent = labelFn(opt);
+    if (opt === currentVal) b.classList.add("active");
+    b.onclick = () => {
+      onSelect(opt);
+      container.querySelectorAll("button").forEach(x => x.classList.remove("active"));
+      b.classList.add("active");
+      updateBestLine();
+    };
+    container.appendChild(b);
+  });
+}
+
+function updateBestLine() {
+  const el = document.getElementById("bestLine");
+  if (!el) return;
+  const best = getBest(bestKey());
+  el.textContent = best ? ("Best for this mode: " + best.score + "/" + best.total) : "No score yet for this mode";
+}
+
 function renderStart() {
   clearTimer();
   app.innerHTML =
@@ -236,49 +282,18 @@ function renderStart() {
       '<div class="seg" id="choiceSeg"></div>' +
       '<div class="seg-label">Time per flag</div>' +
       '<div class="seg" id="timeSeg"></div>' +
+      '<p class="best-line" id="bestLine"></p>' +
       '<button class="btn" id="startBtn">Start Round</button>' +
+      '<p class="reset-link" id="resetLink">Reset best scores</p>' +
     '</div>';
 
-  const lengthSeg = document.getElementById("lengthSeg");
-  LENGTH_OPTIONS.forEach(n => {
-    const b = document.createElement("button");
-    b.textContent = n;
-    if (n === roundLength) b.classList.add("active");
-    b.onclick = () => {
-      roundLength = n;
-      lengthSeg.querySelectorAll("button").forEach(x => x.classList.remove("active"));
-      b.classList.add("active");
-    };
-    lengthSeg.appendChild(b);
-  });
-
-  const choiceSeg = document.getElementById("choiceSeg");
-  CHOICE_OPTIONS.forEach(c => {
-    const b = document.createElement("button");
-    b.textContent = c === "random" ? "Random" : c;
-    if (c === numChoices) b.classList.add("active");
-    b.onclick = () => {
-      numChoices = c;
-      choiceSeg.querySelectorAll("button").forEach(x => x.classList.remove("active"));
-      b.classList.add("active");
-    };
-    choiceSeg.appendChild(b);
-  });
-
-  const timeSeg = document.getElementById("timeSeg");
-  TIME_OPTIONS.forEach(t => {
-    const b = document.createElement("button");
-    b.textContent = t === 0 ? "Off" : t + "s";
-    if (t === timeLimit) b.classList.add("active");
-    b.onclick = () => {
-      timeLimit = t;
-      timeSeg.querySelectorAll("button").forEach(x => x.classList.remove("active"));
-      b.classList.add("active");
-    };
-    timeSeg.appendChild(b);
-  });
+  buildSeg(document.getElementById("lengthSeg"), LENGTH_OPTIONS, roundLength, n => n, n => { roundLength = n; });
+  buildSeg(document.getElementById("choiceSeg"), CHOICE_OPTIONS, numChoices, c => c === "random" ? "Random" : c, c => { numChoices = c; });
+  buildSeg(document.getElementById("timeSeg"), TIME_OPTIONS, timeLimit, t => t === 0 ? "Off" : t + "s", t => { timeLimit = t; });
+  updateBestLine();
 
   document.getElementById("startBtn").onclick = startRound;
+  document.getElementById("resetLink").onclick = () => { resetScores(); updateBestLine(); };
 }
 
 function startRound() {
@@ -375,11 +390,21 @@ function advance() {
 function renderDone() {
   clearTimer();
   const rank = getRank(score, roundLength);
+  const key = bestKey();
+  const prev = getBest(key);
+  const isNewBest = !prev || score > prev.score;
+  recordScore(key, score, roundLength);
+  const best = getBest(key);
+  const bestHtml = isNewBest
+    ? '<p class="newbest">🎉 New personal best for this mode!</p>'
+    : '<p class="best-line">Best for this mode: ' + best.score + '/' + best.total + '</p>';
+
   app.innerHTML =
     '<div class="card">' +
       '<div class="big-emoji">' + rank.emoji + '</div>' +
       '<p class="final-score">' + score + ' / ' + roundLength + '</p>' +
       '<p class="rank">' + rank.title + '</p>' +
+      bestHtml +
       '<button class="btn" id="againBtn">Play Again</button>' +
       '<button class="btn secondary" id="shareBtn">Share my score</button>' +
       '<p class="share-note" id="shareNote"></p>' +
@@ -390,7 +415,8 @@ function renderDone() {
 
 function shareScore() {
   const rank = getRank(score, roundLength);
-  const settings = roundLength + " flags · " + (timeLimit === 0 ? "no timer" : timeLimit + "s per flag");
+  const choiceLabel = numChoices === "random" ? "random choices" : numChoices + " choices";
+  const settings = roundLength + " flags · " + choiceLabel + " · " + (timeLimit === 0 ? "no timer" : timeLimit + "s");
   const text = "🌍 Flag Quiz Challenge\nI scored " + score + "/" + roundLength + " — " + rank.title + " " + rank.emoji + "\n(" + settings + ")\nCan you beat me?";
   const url = window.location.href;
   const note = document.getElementById("shareNote");
