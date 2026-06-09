@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Flag Quiz Challenge</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: linear-gradient(135deg, #eff6ff 0%, #f0fdfa 100%);
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px; min-height: 100%;
+  }
+  .card {
+    background: #fff; border-radius: 24px; padding: 28px; width: 100%;
+    max-width: 460px; box-shadow: 0 20px 50px rgba(15,23,42,0.12); text-align: center;
+  }
+  h1 { margin: 0 0 8px; color: #0f172a; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .pill { font-size: 13px; font-weight: 700; padding: 6px 12px; border-radius: 99px; background: #eff6ff; color: #2563eb; }
+  .pill.score { background: #ecfdf5; color: #059669; }
+  .progress { width: 100%; height: 8px; background: #e2e8f0; border-radius: 99px; margin-bottom: 24px; overflow: hidden; }
+  .progress > div { height: 100%; background: #3b82f6; transition: width 0.3s; }
+  .flag-box {
+    width: 100%; height: 170px; background: #f8fafc; border-radius: 14px;
+    border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center;
+    padding: 14px;
+  }
+  .flag-img { max-height: 100%; max-width: 100%; object-fit: contain; display: block; border-radius: 6px; box-shadow: 0 4px 14px rgba(0,0,0,0.18); }
+  .flag-emoji { font-size: 110px; line-height: 1; }
+  .prompt { color: #64748b; margin: 16px 0 18px; font-size: 15px; font-weight: 600; }
+  .options { display: flex; flex-direction: column; gap: 12px; }
+  .opt {
+    padding: 16px 18px; border-radius: 14px; border: 2px solid #e2e8f0; background: #fff;
+    color: #0f172a; font-size: 17px; font-weight: 600; text-align: left; cursor: pointer;
+    transition: all 0.15s; font-family: inherit;
+  }
+  .opt.correct { background: #dcfce7; border-color: #22c55e; color: #15803d; }
+  .opt.wrong { background: #fee2e2; border-color: #ef4444; color: #b91c1c; }
+  .opt.dim { color: #94a3b8; }
+  .opt:disabled { cursor: default; }
+  .intro { color: #64748b; margin: 0 0 28px; font-size: 16px; line-height: 1.5; }
+  .big-emoji { font-size: 64px; margin-bottom: 8px; }
+  .final-score { font-size: 28px; font-weight: 800; color: #0f172a; margin: 0 0 4px; }
+  .rank { font-size: 20px; font-weight: 600; color: #3b82f6; margin: 0 0 28px; }
+  .btn {
+    width: 100%; padding: 16px; border-radius: 14px; border: none; background: #3b82f6;
+    color: #fff; font-size: 18px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 8px 20px rgba(59,130,246,0.35); font-family: inherit;
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const COUNTRIES = [
+  {code:"af",name:"Afghanistan"},{code:"al",name:"Albania"},{code:"dz",name:"Algeria"},
+  {code:"ad",name:"Andorra"},{code:"ao",name:"Angola"},{code:"ag",name:"Antigua and Barbuda"},
+  {code:"ar",name:"Argentina"},{code:"am",name:"Armenia"},{code:"au",name:"Australia"},
+  {code:"at",name:"Austria"},{code:"az",name:"Azerbaijan"},{code:"bs",name:"Bahamas"},
+  {code:"bh",name:"Bahrain"},{code:"bd",name:"Bangladesh"},{code:"bb",name:"Barbados"},
+  {code:"by",name:"Belarus"},{code:"be",name:"Belgium"},{code:"bz",name:"Belize"},
+  {code:"bj",name:"Benin"},{code:"bt",name:"Bhutan"},{code:"bo",name:"Bolivia"},
+  {code:"ba",name:"Bosnia and Herzegovina"},{code:"bw",name:"Botswana"},{code:"br",name:"Brazil"},
+  {code:"bn",name:"Brunei"},{code:"bg",name:"Bulgaria"},{code:"bf",name:"Burkina Faso"},
+  {code:"bi",name:"Burundi"},{code:"kh",name:"Cambodia"},{code:"cm",name:"Cameroon"},
+  {code:"ca",name:"Canada"},{code:"cv",name:"Cape Verde"},{code:"cf",name:"Central African Republic"},
+  {code:"td",name:"Chad"},{code:"cl",name:"Chile"},{code:"cn",name:"China"},
+  {code:"co",name:"Colombia"},{code:"km",name:"Comoros"},{code:"cg",name:"Congo"},
+  {code:"cd",name:"DR Congo"},{code:"cr",name:"Costa Rica"},{code:"ci",name:"Ivory Coast"},
+  {code:"hr",name:"Croatia"},{code:"cu",name:"Cuba"},{code:"cy",name:"Cyprus"},
+  {code:"cz",name:"Czechia"},{code:"dk",name:"Denmark"},{code:"dj",name:"Djibouti"},
+  {code:"dm",name:"Dominica"},{code:"do",name:"Dominican Republic"},{code:"ec",name:"Ecuador"},
+  {code:"eg",name:"Egypt"},{code:"sv",name:"El Salvador"},{code:"gq",name:"Equatorial Guinea"},
+  {code:"er",name:"Eritrea"},{code:"ee",name:"Estonia"},{code:"sz",name:"Eswatini"},
+  {code:"et",name:"Ethiopia"},{code:"fj",name:"Fiji"},{code:"fi",name:"Finland"},
+  {code:"fr",name:"France"},{code:"ga",name:"Gabon"},{code:"gm",name:"Gambia"},
+  {code:"ge",name:"Georgia"},{code:"de",name:"Germany"},{code:"gh",name:"Ghana"},
+  {code:"gr",name:"Greece"},{code:"gd",name:"Grenada"},{code:"gt",name:"Guatemala"},
+  {code:"gn",name:"Guinea"},{code:"gw",name:"Guinea-Bissau"},{code:"gy",name:"Guyana"},
+  {code:"ht",name:"Haiti"},{code:"hn",name:"Honduras"},{code:"hu",name:"Hungary"},
+  {code:"is",name:"Iceland"},{code:"in",name:"India"},{code:"id",name:"Indonesia"},
+  {code:"ir",name:"Iran"},{code:"iq",name:"Iraq"},{code:"ie",name:"Ireland"},
+  {code:"il",name:"Israel"},{code:"it",name:"Italy"},{code:"jm",name:"Jamaica"},
+  {code:"jp",name:"Japan"},{code:"jo",name:"Jordan"},{code:"kz",name:"Kazakhstan"},
+  {code:"ke",name:"Kenya"},{code:"ki",name:"Kiribati"},{code:"kw",name:"Kuwait"},
+  {code:"kg",name:"Kyrgyzstan"},{code:"la",name:"Laos"},{code:"lv",name:"Latvia"},
+  {code:"lb",name:"Lebanon"},{code:"ls",name:"Lesotho"},{code:"lr",name:"Liberia"},
+  {code:"ly",name:"Libya"},{code:"li",name:"Liechtenstein"},{code:"lt",name:"Lithuania"},
+  {code:"lu",name:"Luxembourg"},{code:"mg",name:"Madagascar"},{code:"mw",name:"Malawi"},
+  {code:"my",name:"Malaysia"},{code:"mv",name:"Maldives"},{code:"ml",name:"Mali"},
+  {code:"mt",name:"Malta"},{code:"mh",name:"Marshall Islands"},{code:"mr",name:"Mauritania"},
+  {code:"mu",name:"Mauritius"},{code:"mx",name:"Mexico"},{code:"fm",name:"Micronesia"},
+  {code:"md",name:"Moldova"},{code:"mc",name:"Monaco"},{code:"mn",name:"Mongolia"},
+  {code:"me",name:"Montenegro"},{code:"ma",name:"Morocco"},{code:"mz",name:"Mozambique"},
+  {code:"mm",name:"Myanmar"},{code:"na",name:"Namibia"},{code:"nr",name:"Nauru"},
+  {code:"np",name:"Nepal"},{code:"nl",name:"Netherlands"},{code:"nz",name:"New Zealand"},
+  {code:"ni",name:"Nicaragua"},{code:"ne",name:"Niger"},{code:"ng",name:"Nigeria"},
+  {code:"kp",name:"North Korea"},{code:"mk",name:"North Macedonia"},{code:"no",name:"Norway"},
+  {code:"om",name:"Oman"},{code:"pk",name:"Pakistan"},{code:"pw",name:"Palau"},
+  {code:"pa",name:"Panama"},{code:"pg",name:"Papua New Guinea"},{code:"py",name:"Paraguay"},
+  {code:"pe",name:"Peru"},{code:"ph",name:"Philippines"},{code:"pl",name:"Poland"},
+  {code:"pt",name:"Portugal"},{code:"qa",name:"Qatar"},{code:"ro",name:"Romania"},
+  {code:"ru",name:"Russia"},{code:"rw",name:"Rwanda"},{code:"kn",name:"Saint Kitts and Nevis"},
+  {code:"lc",name:"Saint Lucia"},{code:"vc",name:"Saint Vincent and the Grenadines"},{code:"ws",name:"Samoa"},
+  {code:"sm",name:"San Marino"},{code:"st",name:"Sao Tome and Principe"},{code:"sa",name:"Saudi Arabia"},
+  {code:"sn",name:"Senegal"},{code:"rs",name:"Serbia"},{code:"sc",name:"Seychelles"},
+  {code:"sl",name:"Sierra Leone"},{code:"sg",name:"Singapore"},{code:"sk",name:"Slovakia"},
+  {code:"si",name:"Slovenia"},{code:"sb",name:"Solomon Islands"},{code:"so",name:"Somalia"},
+  {code:"za",name:"South Africa"},{code:"kr",name:"South Korea"},{code:"ss",name:"South Sudan"},
+  {code:"es",name:"Spain"},{code:"lk",name:"Sri Lanka"},{code:"sd",name:"Sudan"},
+  {code:"sr",name:"Suriname"},{code:"se",name:"Sweden"},{code:"ch",name:"Switzerland"},
+  {code:"sy",name:"Syria"},{code:"tj",name:"Tajikistan"},{code:"tz",name:"Tanzania"},
+  {code:"th",name:"Thailand"},{code:"tl",name:"Timor-Leste"},{code:"tg",name:"Togo"},
+  {code:"to",name:"Tonga"},{code:"tt",name:"Trinidad and Tobago"},{code:"tn",name:"Tunisia"},
+  {code:"tr",name:"Turkey"},{code:"tm",name:"Turkmenistan"},{code:"tv",name:"Tuvalu"},
+  {code:"ug",name:"Uganda"},{code:"ua",name:"Ukraine"},{code:"ae",name:"United Arab Emirates"},
+  {code:"gb",name:"United Kingdom"},{code:"us",name:"United States"},{code:"uy",name:"Uruguay"},
+  {code:"uz",name:"Uzbekistan"},{code:"vu",name:"Vanuatu"},{code:"va",name:"Vatican City"},
+  {code:"ve",name:"Venezuela"},{code:"vn",name:"Vietnam"},{code:"ye",name:"Yemen"},
+  {code:"zm",name:"Zambia"},{code:"zw",name:"Zimbabwe"},
+];
+
+const LOOKALIKE_GROUPS = [
+  ["td","ro","ad","md"], ["id","mc","pl"], ["nl","lu","ru"], ["si","sk","rs","ru"],
+  ["ie","ci","it","mx"], ["no","is","dk","se","fi"], ["co","ec","ve"], ["ae","kw","jo","sd"],
+  ["eg","iq","sy","ye"], ["ml","gn","sn","cm"], ["au","nz"], ["ar","uy"],
+  ["sv","ni","hn"], ["in","ne"], ["qa","bh"], ["cr","th"],
+];
+const GROUPS_BY_CODE = {};
+LOOKALIKE_GROUPS.forEach(g => g.forEach(c => { (GROUPS_BY_CODE[c] = GROUPS_BY_CODE[c] || []).push(g); }));
+
+const QUESTIONS_PER_ROUND = 30;
+const LOOKALIKE_CHANCE = 0.35;
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildRound() {
+  const picks = shuffle(COUNTRIES).slice(0, QUESTIONS_PER_ROUND);
+  return picks.map(correct => {
+    let decoys = [];
+    const groups = GROUPS_BY_CODE[correct.code];
+    if (groups && Math.random() < LOOKALIKE_CHANCE) {
+      const group = groups[Math.floor(Math.random() * groups.length)];
+      decoys = shuffle(COUNTRIES.filter(c => c.code !== correct.code && group.includes(c.code))).slice(0, 2);
+    }
+    if (decoys.length < 2) {
+      const used = new Set([correct.code, ...decoys.map(d => d.code)]);
+      decoys = decoys.concat(shuffle(COUNTRIES.filter(c => !used.has(c.code))).slice(0, 2 - decoys.length));
+    }
+    return { correct, options: shuffle([correct, ...decoys]) };
+  });
+}
+
+function getRank(score) {
+  const p = score / QUESTIONS_PER_ROUND;
+  if (p === 1) return { title: "Flawless! Geography Legend", emoji: "🏆" };
+  if (p >= 0.9) return { title: "Geography Whiz", emoji: "🌟" };
+  if (p >= 0.75) return { title: "Globe Trotter", emoji: "✈️" };
+  if (p >= 0.6) return { title: "Map Reader", emoji: "🗺️" };
+  if (p >= 0.4) return { title: "Casual Explorer", emoji: "🧭" };
+  return { title: "Just Getting Started", emoji: "🌱" };
+}
+
+function makeFlag(code) {
+  const sources = [
+    "https://flagcdn.com/w640/" + code + ".png",
+    "https://flagicons.lipis.dev/flags/4x3/" + code + ".svg",
+    "https://hatscripts.github.io/circle-flags/flags/" + code + ".svg",
+  ];
+  let i = 0;
+  const img = document.createElement("img");
+  img.className = "flag-img";
+  img.alt = "Flag to identify";
+  img.src = sources[0];
+  img.onerror = () => {
+    i++;
+    if (i < sources.length) { img.src = sources[i]; }
+    else {
+      const span = document.createElement("span");
+      span.className = "flag-emoji";
+      span.textContent = code.toUpperCase().replace(/./g, c => String.fromCodePoint(127397 + c.charCodeAt(0)));
+      img.replaceWith(span);
+    }
+  };
+  return img;
+}
+
+const app = document.getElementById("app");
+let round = [], idx = 0, score = 0, locked = false;
+
+function renderStart() {
+  app.innerHTML =
+    '<div class="card">' +
+      '<div class="big-emoji">🌍</div>' +
+      '<h1 style="font-size:32px;font-weight:800;">Flag Quiz Challenge</h1>' +
+      '<p class="intro">Identify ' + QUESTIONS_PER_ROUND + ' flags from around the world. Three choices each — no timer, just you and your geography.</p>' +
+      '<button class="btn" id="startBtn">Start Round</button>' +
+    '</div>';
+  document.getElementById("startBtn").onclick = startRound;
+}
+
+function startRound() {
+  round = buildRound(); idx = 0; score = 0; locked = false;
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = round[idx];
+  locked = false;
+  app.innerHTML =
+    '<div class="card">' +
+      '<div class="topbar">' +
+        '<span class="pill">Question ' + (idx + 1) + ' / ' + QUESTIONS_PER_ROUND + '</span>' +
+        '<span class="pill score">Score: ' + score + '</span>' +
+      '</div>' +
+      '<div class="progress"><div style="width:' + ((idx / QUESTIONS_PER_ROUND) * 100) + '%"></div></div>' +
+      '<div class="flag-box" id="flagBox"></div>' +
+      '<p class="prompt">Which country is this?</p>' +
+      '<div class="options" id="options"></div>' +
+    '</div>';
+
+  document.getElementById("flagBox").appendChild(makeFlag(q.correct.code));
+
+  const optWrap = document.getElementById("options");
+  q.options.forEach(opt => {
+    const b = document.createElement("button");
+    b.className = "opt";
+    b.textContent = opt.name;
+    b.onclick = () => pick(opt, b);
+    optWrap.appendChild(b);
+  });
+}
+
+function pick(option, btn) {
+  if (locked) return;
+  locked = true;
+  const q = round[idx];
+  const buttons = Array.from(document.querySelectorAll(".opt"));
+  buttons.forEach(b => {
+    b.disabled = true;
+    const name = b.textContent;
+    if (name === q.correct.name) b.classList.add("correct");
+    else if (b === btn) b.classList.add("wrong");
+    else b.classList.add("dim");
+  });
+  if (option.code === q.correct.code) score++;
+  setTimeout(() => {
+    if (idx + 1 >= QUESTIONS_PER_ROUND) renderDone();
+    else { idx++; renderQuestion(); }
+  }, 1100);
+}
+
+function renderDone() {
+  const rank = getRank(score);
+  app.innerHTML =
+    '<div class="card">' +
+      '<div class="big-emoji">' + rank.emoji + '</div>' +
+      '<p class="final-score">' + score + ' / ' + QUESTIONS_PER_ROUND + '</p>' +
+      '<p class="rank">' + rank.title + '</p>' +
+      '<button class="btn" id="againBtn">Play Again</button>' +
+    '</div>';
+  document.getElementById("againBtn").onclick = startRound;
+}
+
+renderStart();
+</script>
+</body>
+</html>
