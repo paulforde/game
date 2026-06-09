@@ -371,7 +371,8 @@ function renderDone() {
 
 function shareScore() {
   const rank = getRank(score, roundLength);
-  const text = "🌍 Flag Quiz Challenge\nI scored " + score + "/" + roundLength + " — " + rank.title + " " + rank.emoji + "\nCan you beat me?";
+  const settings = roundLength + " flags · " + (timeLimit === 0 ? "no timer" : timeLimit + "s per flag");
+  const text = "🌍 Flag Quiz Challenge\nI scored " + score + "/" + roundLength + " — " + rank.title + " " + rank.emoji + "\n(" + settings + ")\nCan you beat me?";
   const url = window.location.href;
   const note = document.getElementById("shareNote");
   if (navigator.share) {
