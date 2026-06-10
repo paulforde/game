@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Flag Quiz Challenge</title>
+<title>Quiz Challenge</title>
 <style>
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; }
@@ -17,7 +17,7 @@
     background: #fff; border-radius: 24px; padding: 28px; width: 100%;
     max-width: 460px; box-shadow: 0 20px 50px rgba(15,23,42,0.12); text-align: center;
   }
-  h1 { margin: 0 0 8px; color: #0f172a; }
+  h1 { margin: 0 0 8px; color: #0f172a; font-size: 30px; font-weight: 800; }
   .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
   .pill { font-size: 13px; font-weight: 700; padding: 6px 12px; border-radius: 99px; background: #eff6ff; color: #2563eb; }
   .pill.score { background: #ecfdf5; color: #059669; }
@@ -29,8 +29,12 @@
   .timer-num { font-size: 13px; font-weight: 800; color: #2563eb; min-width: 34px; text-align: right; }
   .flag-box {
     width: 100%; height: 170px; background: #f8fafc; border-radius: 14px;
-    border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center;
-    padding: 14px;
+    border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; padding: 14px;
+  }
+  .prompt-box {
+    width: 100%; min-height: 170px; background: #f8fafc; border-radius: 14px; border: 1px solid #e2e8f0;
+    display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;
+    font-size: 30px; font-weight: 800; color: #0f172a; text-align: center; line-height: 1.25;
   }
   .flag-img { max-height: 100%; max-width: 100%; object-fit: contain; display: block; border-radius: 6px; box-shadow: 0 4px 14px rgba(0,0,0,0.18); }
   .flag-emoji { font-size: 110px; line-height: 1; }
@@ -62,84 +66,103 @@
   .btn {
     width: 100%; padding: 16px; border-radius: 14px; border: none; background: #3b82f6;
     color: #fff; font-size: 18px; font-weight: 700; cursor: pointer;
-    box-shadow: 0 8px 20px rgba(59,130,246,0.35); font-family: inherit; margin-top: 26px;
+    box-shadow: 0 8px 20px rgba(59,130,246,0.35); font-family: inherit; margin-top: 14px;
   }
-  .btn.secondary {
-    background: #fff; color: #3b82f6; border: 2px solid #3b82f6; box-shadow: none; margin-top: 12px;
-  }
+  .btn.secondary { background: #fff; color: #3b82f6; border: 2px solid #3b82f6; box-shadow: none; }
+  .btn.start { margin-top: 26px; }
   .share-note { font-size: 13px; color: #059669; font-weight: 700; margin: 14px 0 0; min-height: 16px; }
+  .notes { text-align: left; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px 18px; margin-top: 18px; }
+  .notes-title { font-size: 12px; font-weight: 800; color: #94a3b8; letter-spacing: 0.6px; text-transform: uppercase; margin-bottom: 8px; }
+  .note-item { font-size: 13.5px; line-height: 1.5; color: #475569; margin: 0 0 10px; }
+  .note-item:last-child { margin-bottom: 0; }
 </style>
 </head>
 <body>
 <div id="app"></div>
 <script>
 const COUNTRIES = [
-  {code:"af",name:"Afghanistan"},{code:"al",name:"Albania"},{code:"dz",name:"Algeria"},
-  {code:"ad",name:"Andorra"},{code:"ao",name:"Angola"},{code:"ag",name:"Antigua and Barbuda"},
-  {code:"ar",name:"Argentina"},{code:"am",name:"Armenia"},{code:"au",name:"Australia"},
-  {code:"at",name:"Austria"},{code:"az",name:"Azerbaijan"},{code:"bs",name:"Bahamas"},
-  {code:"bh",name:"Bahrain"},{code:"bd",name:"Bangladesh"},{code:"bb",name:"Barbados"},
-  {code:"by",name:"Belarus"},{code:"be",name:"Belgium"},{code:"bz",name:"Belize"},
-  {code:"bj",name:"Benin"},{code:"bt",name:"Bhutan"},{code:"bo",name:"Bolivia"},
-  {code:"ba",name:"Bosnia and Herzegovina"},{code:"bw",name:"Botswana"},{code:"br",name:"Brazil"},
-  {code:"bn",name:"Brunei"},{code:"bg",name:"Bulgaria"},{code:"bf",name:"Burkina Faso"},
-  {code:"bi",name:"Burundi"},{code:"kh",name:"Cambodia"},{code:"cm",name:"Cameroon"},
-  {code:"ca",name:"Canada"},{code:"cv",name:"Cape Verde"},{code:"cf",name:"Central African Republic"},
-  {code:"td",name:"Chad"},{code:"cl",name:"Chile"},{code:"cn",name:"China"},
-  {code:"co",name:"Colombia"},{code:"km",name:"Comoros"},{code:"cg",name:"Congo"},
-  {code:"cd",name:"DR Congo"},{code:"cr",name:"Costa Rica"},{code:"ci",name:"Ivory Coast"},
-  {code:"hr",name:"Croatia"},{code:"cu",name:"Cuba"},{code:"cy",name:"Cyprus"},
-  {code:"cz",name:"Czechia"},{code:"dk",name:"Denmark"},{code:"dj",name:"Djibouti"},
-  {code:"dm",name:"Dominica"},{code:"do",name:"Dominican Republic"},{code:"ec",name:"Ecuador"},
-  {code:"eg",name:"Egypt"},{code:"sv",name:"El Salvador"},{code:"gq",name:"Equatorial Guinea"},
-  {code:"er",name:"Eritrea"},{code:"ee",name:"Estonia"},{code:"sz",name:"Eswatini"},
-  {code:"et",name:"Ethiopia"},{code:"fj",name:"Fiji"},{code:"fi",name:"Finland"},
-  {code:"fr",name:"France"},{code:"ga",name:"Gabon"},{code:"gm",name:"Gambia"},
-  {code:"ge",name:"Georgia"},{code:"de",name:"Germany"},{code:"gh",name:"Ghana"},
-  {code:"gr",name:"Greece"},{code:"gd",name:"Grenada"},{code:"gt",name:"Guatemala"},
-  {code:"gn",name:"Guinea"},{code:"gw",name:"Guinea-Bissau"},{code:"gy",name:"Guyana"},
-  {code:"ht",name:"Haiti"},{code:"hn",name:"Honduras"},{code:"hu",name:"Hungary"},
-  {code:"is",name:"Iceland"},{code:"in",name:"India"},{code:"id",name:"Indonesia"},
-  {code:"ir",name:"Iran"},{code:"iq",name:"Iraq"},{code:"ie",name:"Ireland"},
-  {code:"il",name:"Israel"},{code:"it",name:"Italy"},{code:"jm",name:"Jamaica"},
-  {code:"jp",name:"Japan"},{code:"jo",name:"Jordan"},{code:"kz",name:"Kazakhstan"},
-  {code:"ke",name:"Kenya"},{code:"ki",name:"Kiribati"},{code:"kw",name:"Kuwait"},
-  {code:"kg",name:"Kyrgyzstan"},{code:"la",name:"Laos"},{code:"lv",name:"Latvia"},
-  {code:"lb",name:"Lebanon"},{code:"ls",name:"Lesotho"},{code:"lr",name:"Liberia"},
-  {code:"ly",name:"Libya"},{code:"li",name:"Liechtenstein"},{code:"lt",name:"Lithuania"},
-  {code:"lu",name:"Luxembourg"},{code:"mg",name:"Madagascar"},{code:"mw",name:"Malawi"},
-  {code:"my",name:"Malaysia"},{code:"mv",name:"Maldives"},{code:"ml",name:"Mali"},
-  {code:"mt",name:"Malta"},{code:"mh",name:"Marshall Islands"},{code:"mr",name:"Mauritania"},
-  {code:"mu",name:"Mauritius"},{code:"mx",name:"Mexico"},{code:"fm",name:"Micronesia"},
-  {code:"md",name:"Moldova"},{code:"mc",name:"Monaco"},{code:"mn",name:"Mongolia"},
-  {code:"me",name:"Montenegro"},{code:"ma",name:"Morocco"},{code:"mz",name:"Mozambique"},
-  {code:"mm",name:"Myanmar"},{code:"na",name:"Namibia"},{code:"nr",name:"Nauru"},
-  {code:"np",name:"Nepal"},{code:"nl",name:"Netherlands"},{code:"nz",name:"New Zealand"},
-  {code:"ni",name:"Nicaragua"},{code:"ne",name:"Niger"},{code:"ng",name:"Nigeria"},
-  {code:"kp",name:"North Korea"},{code:"mk",name:"North Macedonia"},{code:"no",name:"Norway"},
-  {code:"om",name:"Oman"},{code:"pk",name:"Pakistan"},{code:"pw",name:"Palau"},
-  {code:"pa",name:"Panama"},{code:"pg",name:"Papua New Guinea"},{code:"py",name:"Paraguay"},
-  {code:"pe",name:"Peru"},{code:"ph",name:"Philippines"},{code:"pl",name:"Poland"},
-  {code:"pt",name:"Portugal"},{code:"qa",name:"Qatar"},{code:"ro",name:"Romania"},
-  {code:"ru",name:"Russia"},{code:"rw",name:"Rwanda"},{code:"kn",name:"Saint Kitts and Nevis"},
-  {code:"lc",name:"Saint Lucia"},{code:"vc",name:"Saint Vincent and the Grenadines"},{code:"ws",name:"Samoa"},
-  {code:"sm",name:"San Marino"},{code:"st",name:"Sao Tome and Principe"},{code:"sa",name:"Saudi Arabia"},
-  {code:"sn",name:"Senegal"},{code:"rs",name:"Serbia"},{code:"sc",name:"Seychelles"},
-  {code:"sl",name:"Sierra Leone"},{code:"sg",name:"Singapore"},{code:"sk",name:"Slovakia"},
-  {code:"si",name:"Slovenia"},{code:"sb",name:"Solomon Islands"},{code:"so",name:"Somalia"},
-  {code:"za",name:"South Africa"},{code:"kr",name:"South Korea"},{code:"ss",name:"South Sudan"},
-  {code:"es",name:"Spain"},{code:"lk",name:"Sri Lanka"},{code:"sd",name:"Sudan"},
-  {code:"sr",name:"Suriname"},{code:"se",name:"Sweden"},{code:"ch",name:"Switzerland"},
-  {code:"sy",name:"Syria"},{code:"tj",name:"Tajikistan"},{code:"tz",name:"Tanzania"},
-  {code:"th",name:"Thailand"},{code:"tl",name:"Timor-Leste"},{code:"tg",name:"Togo"},
-  {code:"to",name:"Tonga"},{code:"tt",name:"Trinidad and Tobago"},{code:"tn",name:"Tunisia"},
-  {code:"tr",name:"Turkey"},{code:"tm",name:"Turkmenistan"},{code:"tv",name:"Tuvalu"},
-  {code:"ug",name:"Uganda"},{code:"ua",name:"Ukraine"},{code:"ae",name:"United Arab Emirates"},
-  {code:"gb",name:"United Kingdom"},{code:"us",name:"United States"},{code:"uy",name:"Uruguay"},
-  {code:"uz",name:"Uzbekistan"},{code:"vu",name:"Vanuatu"},{code:"va",name:"Vatican City"},
-  {code:"ve",name:"Venezuela"},{code:"vn",name:"Vietnam"},{code:"ye",name:"Yemen"},
-  {code:"zm",name:"Zambia"},{code:"zw",name:"Zimbabwe"},
+  {code:"af",name:"Afghanistan",capital:"Kabul"},{code:"al",name:"Albania",capital:"Tirana"},{code:"dz",name:"Algeria",capital:"Algiers"},
+  {code:"ad",name:"Andorra",capital:"Andorra la Vella"},{code:"ao",name:"Angola",capital:"Luanda"},{code:"ag",name:"Antigua and Barbuda",capital:"Saint John's"},
+  {code:"ar",name:"Argentina",capital:"Buenos Aires"},{code:"am",name:"Armenia",capital:"Yerevan"},{code:"au",name:"Australia",capital:"Canberra"},
+  {code:"at",name:"Austria",capital:"Vienna"},{code:"az",name:"Azerbaijan",capital:"Baku"},{code:"bs",name:"Bahamas",capital:"Nassau"},
+  {code:"bh",name:"Bahrain",capital:"Manama"},{code:"bd",name:"Bangladesh",capital:"Dhaka"},{code:"bb",name:"Barbados",capital:"Bridgetown"},
+  {code:"by",name:"Belarus",capital:"Minsk"},{code:"be",name:"Belgium",capital:"Brussels"},{code:"bz",name:"Belize",capital:"Belmopan"},
+  {code:"bj",name:"Benin",capital:"Porto-Novo"},{code:"bt",name:"Bhutan",capital:"Thimphu"},{code:"bo",name:"Bolivia",capital:"Sucre"},
+  {code:"ba",name:"Bosnia and Herzegovina",capital:"Sarajevo"},{code:"bw",name:"Botswana",capital:"Gaborone"},{code:"br",name:"Brazil",capital:"Brasília"},
+  {code:"bn",name:"Brunei",capital:"Bandar Seri Begawan"},{code:"bg",name:"Bulgaria",capital:"Sofia"},{code:"bf",name:"Burkina Faso",capital:"Ouagadougou"},
+  {code:"bi",name:"Burundi",capital:"Gitega"},{code:"kh",name:"Cambodia",capital:"Phnom Penh"},{code:"cm",name:"Cameroon",capital:"Yaoundé"},
+  {code:"ca",name:"Canada",capital:"Ottawa"},{code:"cv",name:"Cape Verde",capital:"Praia"},{code:"cf",name:"Central African Republic",capital:"Bangui"},
+  {code:"td",name:"Chad",capital:"N'Djamena"},{code:"cl",name:"Chile",capital:"Santiago"},{code:"cn",name:"China",capital:"Beijing"},
+  {code:"co",name:"Colombia",capital:"Bogotá"},{code:"km",name:"Comoros",capital:"Moroni"},{code:"cg",name:"Congo",capital:"Brazzaville"},
+  {code:"cd",name:"DR Congo",capital:"Kinshasa"},{code:"cr",name:"Costa Rica",capital:"San José"},{code:"ci",name:"Ivory Coast",capital:"Yamoussoukro"},
+  {code:"hr",name:"Croatia",capital:"Zagreb"},{code:"cu",name:"Cuba",capital:"Havana"},{code:"cy",name:"Cyprus",capital:"Nicosia"},
+  {code:"cz",name:"Czechia",capital:"Prague"},{code:"dk",name:"Denmark",capital:"Copenhagen"},{code:"dj",name:"Djibouti",capital:"Djibouti"},
+  {code:"dm",name:"Dominica",capital:"Roseau"},{code:"do",name:"Dominican Republic",capital:"Santo Domingo"},{code:"ec",name:"Ecuador",capital:"Quito"},
+  {code:"eg",name:"Egypt",capital:"Cairo"},{code:"sv",name:"El Salvador",capital:"San Salvador"},{code:"gq",name:"Equatorial Guinea",capital:"Malabo"},
+  {code:"er",name:"Eritrea",capital:"Asmara"},{code:"ee",name:"Estonia",capital:"Tallinn"},{code:"sz",name:"Eswatini",capital:"Mbabane"},
+  {code:"et",name:"Ethiopia",capital:"Addis Ababa"},{code:"fj",name:"Fiji",capital:"Suva"},{code:"fi",name:"Finland",capital:"Helsinki"},
+  {code:"fr",name:"France",capital:"Paris"},{code:"ga",name:"Gabon",capital:"Libreville"},{code:"gm",name:"Gambia",capital:"Banjul"},
+  {code:"ge",name:"Georgia",capital:"Tbilisi"},{code:"de",name:"Germany",capital:"Berlin"},{code:"gh",name:"Ghana",capital:"Accra"},
+  {code:"gr",name:"Greece",capital:"Athens"},{code:"gd",name:"Grenada",capital:"Saint George's"},{code:"gt",name:"Guatemala",capital:"Guatemala City"},
+  {code:"gn",name:"Guinea",capital:"Conakry"},{code:"gw",name:"Guinea-Bissau",capital:"Bissau"},{code:"gy",name:"Guyana",capital:"Georgetown"},
+  {code:"ht",name:"Haiti",capital:"Port-au-Prince"},{code:"hn",name:"Honduras",capital:"Tegucigalpa"},{code:"hu",name:"Hungary",capital:"Budapest"},
+  {code:"is",name:"Iceland",capital:"Reykjavík"},{code:"in",name:"India",capital:"New Delhi"},{code:"id",name:"Indonesia",capital:"Jakarta"},
+  {code:"ir",name:"Iran",capital:"Tehran"},{code:"iq",name:"Iraq",capital:"Baghdad"},{code:"ie",name:"Ireland",capital:"Dublin"},
+  {code:"il",name:"Israel",capital:"Jerusalem"},{code:"it",name:"Italy",capital:"Rome"},{code:"jm",name:"Jamaica",capital:"Kingston"},
+  {code:"jp",name:"Japan",capital:"Tokyo"},{code:"jo",name:"Jordan",capital:"Amman"},{code:"kz",name:"Kazakhstan",capital:"Astana"},
+  {code:"ke",name:"Kenya",capital:"Nairobi"},{code:"ki",name:"Kiribati",capital:"Tarawa"},{code:"kw",name:"Kuwait",capital:"Kuwait City"},
+  {code:"kg",name:"Kyrgyzstan",capital:"Bishkek"},{code:"la",name:"Laos",capital:"Vientiane"},{code:"lv",name:"Latvia",capital:"Riga"},
+  {code:"lb",name:"Lebanon",capital:"Beirut"},{code:"ls",name:"Lesotho",capital:"Maseru"},{code:"lr",name:"Liberia",capital:"Monrovia"},
+  {code:"ly",name:"Libya",capital:"Tripoli"},{code:"li",name:"Liechtenstein",capital:"Vaduz"},{code:"lt",name:"Lithuania",capital:"Vilnius"},
+  {code:"lu",name:"Luxembourg",capital:"Luxembourg"},{code:"mg",name:"Madagascar",capital:"Antananarivo"},{code:"mw",name:"Malawi",capital:"Lilongwe"},
+  {code:"my",name:"Malaysia",capital:"Kuala Lumpur"},{code:"mv",name:"Maldives",capital:"Malé"},{code:"ml",name:"Mali",capital:"Bamako"},
+  {code:"mt",name:"Malta",capital:"Valletta"},{code:"mh",name:"Marshall Islands",capital:"Majuro"},{code:"mr",name:"Mauritania",capital:"Nouakchott"},
+  {code:"mu",name:"Mauritius",capital:"Port Louis"},{code:"mx",name:"Mexico",capital:"Mexico City"},{code:"fm",name:"Micronesia",capital:"Palikir"},
+  {code:"md",name:"Moldova",capital:"Chișinău"},{code:"mc",name:"Monaco",capital:"Monaco"},{code:"mn",name:"Mongolia",capital:"Ulaanbaatar"},
+  {code:"me",name:"Montenegro",capital:"Podgorica"},{code:"ma",name:"Morocco",capital:"Rabat"},{code:"mz",name:"Mozambique",capital:"Maputo"},
+  {code:"mm",name:"Myanmar",capital:"Naypyidaw"},{code:"na",name:"Namibia",capital:"Windhoek"},{code:"nr",name:"Nauru",capital:"Yaren"},
+  {code:"np",name:"Nepal",capital:"Kathmandu"},{code:"nl",name:"Netherlands",capital:"Amsterdam"},{code:"nz",name:"New Zealand",capital:"Wellington"},
+  {code:"ni",name:"Nicaragua",capital:"Managua"},{code:"ne",name:"Niger",capital:"Niamey"},{code:"ng",name:"Nigeria",capital:"Abuja"},
+  {code:"kp",name:"North Korea",capital:"Pyongyang"},{code:"mk",name:"North Macedonia",capital:"Skopje"},{code:"no",name:"Norway",capital:"Oslo"},
+  {code:"om",name:"Oman",capital:"Muscat"},{code:"pk",name:"Pakistan",capital:"Islamabad"},{code:"pw",name:"Palau",capital:"Ngerulmud"},
+  {code:"pa",name:"Panama",capital:"Panama City"},{code:"pg",name:"Papua New Guinea",capital:"Port Moresby"},{code:"py",name:"Paraguay",capital:"Asunción"},
+  {code:"pe",name:"Peru",capital:"Lima"},{code:"ph",name:"Philippines",capital:"Manila"},{code:"pl",name:"Poland",capital:"Warsaw"},
+  {code:"pt",name:"Portugal",capital:"Lisbon"},{code:"qa",name:"Qatar",capital:"Doha"},{code:"ro",name:"Romania",capital:"Bucharest"},
+  {code:"ru",name:"Russia",capital:"Moscow"},{code:"rw",name:"Rwanda",capital:"Kigali"},{code:"kn",name:"Saint Kitts and Nevis",capital:"Basseterre"},
+  {code:"lc",name:"Saint Lucia",capital:"Castries"},{code:"vc",name:"Saint Vincent and the Grenadines",capital:"Kingstown"},{code:"ws",name:"Samoa",capital:"Apia"},
+  {code:"sm",name:"San Marino",capital:"San Marino"},{code:"st",name:"Sao Tome and Principe",capital:"São Tomé"},{code:"sa",name:"Saudi Arabia",capital:"Riyadh"},
+  {code:"sn",name:"Senegal",capital:"Dakar"},{code:"rs",name:"Serbia",capital:"Belgrade"},{code:"sc",name:"Seychelles",capital:"Victoria"},
+  {code:"sl",name:"Sierra Leone",capital:"Freetown"},{code:"sg",name:"Singapore",capital:"Singapore"},{code:"sk",name:"Slovakia",capital:"Bratislava"},
+  {code:"si",name:"Slovenia",capital:"Ljubljana"},{code:"sb",name:"Solomon Islands",capital:"Honiara"},{code:"so",name:"Somalia",capital:"Mogadishu"},
+  {code:"za",name:"South Africa",capital:"Pretoria"},{code:"kr",name:"South Korea",capital:"Seoul"},{code:"ss",name:"South Sudan",capital:"Juba"},
+  {code:"es",name:"Spain",capital:"Madrid"},{code:"lk",name:"Sri Lanka",capital:"Sri Jayawardenepura Kotte"},{code:"sd",name:"Sudan",capital:"Khartoum"},
+  {code:"sr",name:"Suriname",capital:"Paramaribo"},{code:"se",name:"Sweden",capital:"Stockholm"},{code:"ch",name:"Switzerland",capital:"Bern"},
+  {code:"sy",name:"Syria",capital:"Damascus"},{code:"tj",name:"Tajikistan",capital:"Dushanbe"},{code:"tz",name:"Tanzania",capital:"Dodoma"},
+  {code:"th",name:"Thailand",capital:"Bangkok"},{code:"tl",name:"Timor-Leste",capital:"Dili"},{code:"tg",name:"Togo",capital:"Lomé"},
+  {code:"to",name:"Tonga",capital:"Nuku'alofa"},{code:"tt",name:"Trinidad and Tobago",capital:"Port of Spain"},{code:"tn",name:"Tunisia",capital:"Tunis"},
+  {code:"tr",name:"Turkey",capital:"Ankara"},{code:"tm",name:"Turkmenistan",capital:"Ashgabat"},{code:"tv",name:"Tuvalu",capital:"Funafuti"},
+  {code:"ug",name:"Uganda",capital:"Kampala"},{code:"ua",name:"Ukraine",capital:"Kyiv"},{code:"ae",name:"United Arab Emirates",capital:"Abu Dhabi"},
+  {code:"gb",name:"United Kingdom",capital:"London"},{code:"us",name:"United States",capital:"Washington, D.C."},{code:"uy",name:"Uruguay",capital:"Montevideo"},
+  {code:"uz",name:"Uzbekistan",capital:"Tashkent"},{code:"vu",name:"Vanuatu",capital:"Port Vila"},{code:"va",name:"Vatican City",capital:"Vatican City"},
+  {code:"ve",name:"Venezuela",capital:"Caracas"},{code:"vn",name:"Vietnam",capital:"Hanoi"},{code:"ye",name:"Yemen",capital:"Sana'a"},
+  {code:"zm",name:"Zambia",capital:"Lusaka"},{code:"zw",name:"Zimbabwe",capital:"Harare"},
 ];
+
+const CAPITAL_NOTES = {
+  bo: "Bolivia: Sucre is the constitutional capital, while La Paz is the seat of government and largest city.",
+  za: "South Africa has three capitals — Pretoria (executive), Cape Town (legislative), and Bloemfontein (judicial).",
+  lk: "Sri Lanka: Sri Jayawardenepura Kotte is the official/legislative capital; Colombo is the commercial hub and largest city.",
+  ci: "Ivory Coast: Yamoussoukro has been the official capital since 1983, but Abidjan remains the economic centre and largest city.",
+  tz: "Tanzania: Dodoma is the official capital (since 1996); Dar es Salaam is the largest city and former capital.",
+  sz: "Eswatini: Mbabane is the administrative capital, while Lobamba is the royal and legislative capital.",
+  il: "Israel designates Jerusalem as its capital and seat of government, though its status is internationally disputed and many embassies sit in Tel Aviv.",
+  nl: "Netherlands: Amsterdam is the constitutional capital, but the government and parliament sit in The Hague.",
+  bj: "Benin: Porto-Novo is the official capital, while Cotonou is the seat of government and largest city.",
+  my: "Malaysia: Kuala Lumpur is the capital, but the federal administrative centre is Putrajaya.",
+  mm: "Myanmar moved its capital from Yangon to the purpose-built city of Naypyidaw in 2005.",
+  kz: "Kazakhstan's capital Astana was renamed Nur-Sultan in 2019, then changed back to Astana in 2022.",
+  bi: "Burundi: Gitega became the political capital in 2019; Bujumbura remains the economic capital.",
+};
 
 const LOOKALIKE_GROUPS = [
   ["td","ro","ad","md"], ["id","mc","pl"], ["nl","lu","ru"], ["si","sk","rs","ru"],
@@ -151,20 +174,36 @@ const GROUPS_BY_CODE = {};
 LOOKALIKE_GROUPS.forEach(g => g.forEach(c => { (GROUPS_BY_CODE[c] = GROUPS_BY_CODE[c] || []).push(g); }));
 
 const LOOKALIKE_CHANCE = 0.35;
-const LENGTH_OPTIONS = [15, 20, 25, 30];
-const CHOICE_OPTIONS = [3, 4, 5, "random"];
-const TIME_OPTIONS = [0, 5, 10, 15]; // 0 = Off
-const STORE_KEY = "flagquiz_highscores";
+const LENGTH_OPTIONS = [15, 20, 25];
+const CHOICE_OPTIONS = [3, 4, 5];
+const TIME_OPTIONS = [5, 10, 0]; // 0 = Off
+const STORE_KEY = "quizchallenge_highscores";
 
 // ----- state -----
-let roundLength = 30;
-let numChoices = 3;      // 3, 4, 5, or "random"
-let timeLimit = 0;       // seconds, 0 = no timer
+let gameType = "flag";        // "flag" | "capital"
+let capitalDir = "cap2country"; // "cap2country" (show capital, pick country) | "country2cap"
+let roundLength = 20;
+let numChoices = 3;
+let timeLimit = 0;            // seconds, 0 = no timer
 let round = [], idx = 0, score = 0, locked = false, timerId = null;
 
-// ----- high score storage (per settings combo) -----
+// ----- labels -----
+function modeTitle() {
+  if (gameType === "flag") return "🌍 Flag Challenge";
+  return capitalDir === "cap2country" ? "🏛️ Capital → Country" : "🏛️ Country → Capital";
+}
+function promptLabel() {
+  if (gameType === "flag") return "Which country is this?";
+  return capitalDir === "cap2country" ? "Which country's capital is this?" : "What is the capital?";
+}
+function optionText(country) {
+  return (gameType === "capital" && capitalDir === "country2cap") ? country.capital : country.name;
+}
+
+// ----- high score storage (per game + direction + settings) -----
 function bestKey() {
-  return roundLength + "|" + (numChoices === "random" ? "R" : numChoices) + "|" + timeLimit;
+  const g = gameType === "flag" ? "flag" : "cap_" + capitalDir;
+  return g + "|" + roundLength + "|" + numChoices + "|" + timeLimit;
 }
 function loadScores() {
   try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; }
@@ -179,9 +218,7 @@ function recordScore(key, sc, total) {
     try { localStorage.setItem(STORE_KEY, JSON.stringify(all)); } catch (e) {}
   }
 }
-function resetScores() {
-  try { localStorage.removeItem(STORE_KEY); } catch (e) {}
-}
+function resetScores() { try { localStorage.removeItem(STORE_KEY); } catch (e) {} }
 
 function shuffle(arr) {
   const a = arr.slice();
@@ -192,22 +229,23 @@ function shuffle(arr) {
   return a;
 }
 
-function buildRound(length, choices) {
+function buildRound(length, choices, game) {
   const picks = shuffle(COUNTRIES).slice(0, length);
   return picks.map(correct => {
-    const total = choices === "random" ? (3 + Math.floor(Math.random() * 3)) : choices;
-    const decoyCount = total - 1;
+    const decoyCount = choices - 1;
     let decoys = [];
-    const groups = GROUPS_BY_CODE[correct.code];
-    if (groups && Math.random() < LOOKALIKE_CHANCE) {
-      const group = groups[Math.floor(Math.random() * groups.length)];
-      decoys = shuffle(COUNTRIES.filter(c => c.code !== correct.code && group.includes(c.code))).slice(0, decoyCount);
+    if (game === "flag") {
+      const groups = GROUPS_BY_CODE[correct.code];
+      if (groups && Math.random() < LOOKALIKE_CHANCE) {
+        const group = groups[Math.floor(Math.random() * groups.length)];
+        decoys = shuffle(COUNTRIES.filter(c => c.code !== correct.code && group.includes(c.code))).slice(0, decoyCount);
+      }
     }
     if (decoys.length < decoyCount) {
       const used = new Set([correct.code, ...decoys.map(d => d.code)]);
       decoys = decoys.concat(shuffle(COUNTRIES.filter(c => !used.has(c.code))).slice(0, decoyCount - decoys.length));
     }
-    return { correct, options: shuffle([correct, ...decoys]) };
+    return { correct, countries: shuffle([correct, ...decoys]) };
   });
 }
 
@@ -247,6 +285,39 @@ function makeFlag(code) {
 
 const app = document.getElementById("app");
 
+// ----- home screen -----
+function renderHome() {
+  clearTimer();
+  app.innerHTML =
+    '<div class="card">' +
+      '<div class="big-emoji">🌐</div>' +
+      '<h1>Quiz Challenge</h1>' +
+      '<p class="intro">Choose a challenge.</p>' +
+      '<button class="btn start" id="flagBtn">🌍 Flag Challenge</button>' +
+      '<button class="btn" id="capBtn">🏛️ Capital Challenge</button>' +
+    '</div>';
+  document.getElementById("flagBtn").onclick = () => { gameType = "flag"; renderSettings(); };
+  document.getElementById("capBtn").onclick = () => { gameType = "capital"; renderCapitalMode(); };
+}
+
+// ----- capital direction screen -----
+function renderCapitalMode() {
+  clearTimer();
+  app.innerHTML =
+    '<div class="card">' +
+      '<div class="big-emoji">🏛️</div>' +
+      '<h1>Capital Challenge</h1>' +
+      '<p class="intro">Pick a direction.</p>' +
+      '<button class="btn start" id="aBtn">Capital → name the Country</button>' +
+      '<button class="btn" id="bBtn">Country → name the Capital</button>' +
+      '<p class="reset-link" id="backHome">← Back</p>' +
+    '</div>';
+  document.getElementById("aBtn").onclick = () => { capitalDir = "cap2country"; renderSettings(); };
+  document.getElementById("bBtn").onclick = () => { capitalDir = "country2cap"; renderSettings(); };
+  document.getElementById("backHome").onclick = renderHome;
+}
+
+// ----- settings screen -----
 function buildSeg(container, options, currentVal, labelFn, onSelect) {
   options.forEach(opt => {
     const b = document.createElement("button");
@@ -269,35 +340,34 @@ function updateBestLine() {
   el.textContent = best ? ("Best for this mode: " + best.score + "/" + best.total) : "No score yet for this mode";
 }
 
-function renderStart() {
+function renderSettings() {
   clearTimer();
   app.innerHTML =
     '<div class="card">' +
-      '<div class="big-emoji">🌍</div>' +
-      '<h1 style="font-size:32px;font-weight:800;">Flag Quiz Challenge</h1>' +
-      '<p class="intro">Pick your settings, then test your geography.</p>' +
-      '<div class="seg-label">Number of flags</div>' +
+      '<h1>' + modeTitle() + '</h1>' +
+      '<p class="intro">Pick your settings, then play.</p>' +
+      '<div class="seg-label">Number of questions</div>' +
       '<div class="seg" id="lengthSeg"></div>' +
-      '<div class="seg-label">Choices per flag</div>' +
+      '<div class="seg-label">Choices per question</div>' +
       '<div class="seg" id="choiceSeg"></div>' +
-      '<div class="seg-label">Time per flag</div>' +
+      '<div class="seg-label">Time per question</div>' +
       '<div class="seg" id="timeSeg"></div>' +
       '<p class="best-line" id="bestLine"></p>' +
-      '<button class="btn" id="startBtn">Start Round</button>' +
-      '<p class="reset-link" id="resetLink">Reset best scores</p>' +
+      '<button class="btn start" id="startBtn">Start Round</button>' +
+      '<p class="reset-link" id="backLink">← Back</p>' +
     '</div>';
 
   buildSeg(document.getElementById("lengthSeg"), LENGTH_OPTIONS, roundLength, n => n, n => { roundLength = n; });
-  buildSeg(document.getElementById("choiceSeg"), CHOICE_OPTIONS, numChoices, c => c === "random" ? "Random" : c, c => { numChoices = c; });
+  buildSeg(document.getElementById("choiceSeg"), CHOICE_OPTIONS, numChoices, c => c, c => { numChoices = c; });
   buildSeg(document.getElementById("timeSeg"), TIME_OPTIONS, timeLimit, t => t === 0 ? "Off" : t + "s", t => { timeLimit = t; });
   updateBestLine();
 
   document.getElementById("startBtn").onclick = startRound;
-  document.getElementById("resetLink").onclick = () => { resetScores(); updateBestLine(); };
+  document.getElementById("backLink").onclick = () => { gameType === "capital" ? renderCapitalMode() : renderHome(); };
 }
 
 function startRound() {
-  round = buildRound(roundLength, numChoices); idx = 0; score = 0; locked = false;
+  round = buildRound(roundLength, numChoices, gameType); idx = 0; score = 0; locked = false;
   renderQuestion();
 }
 
@@ -329,6 +399,13 @@ function renderQuestion() {
   const timerHtml = timeLimit > 0
     ? '<div class="timer-wrap"><div class="timer-bar"><div id="timerFill"></div></div><span class="timer-num" id="timerNum">' + timeLimit + 's</span></div>'
     : '';
+  let promptArea;
+  if (gameType === "flag") {
+    promptArea = '<div class="flag-box" id="flagBox"></div>';
+  } else {
+    const big = capitalDir === "cap2country" ? q.correct.capital : q.correct.name;
+    promptArea = '<div class="prompt-box">' + big + '</div>';
+  }
   app.innerHTML =
     '<div class="card">' +
       '<div class="topbar">' +
@@ -337,19 +414,20 @@ function renderQuestion() {
       '</div>' +
       '<div class="progress"><div style="width:' + ((idx / roundLength) * 100) + '%"></div></div>' +
       timerHtml +
-      '<div class="flag-box" id="flagBox"></div>' +
-      '<p class="prompt">Which country is this?</p>' +
+      promptArea +
+      '<p class="prompt">' + promptLabel() + '</p>' +
       '<div class="options" id="options"></div>' +
     '</div>';
 
-  document.getElementById("flagBox").appendChild(makeFlag(q.correct.code));
+  if (gameType === "flag") document.getElementById("flagBox").appendChild(makeFlag(q.correct.code));
 
   const optWrap = document.getElementById("options");
-  q.options.forEach(opt => {
+  q.countries.forEach(country => {
     const b = document.createElement("button");
     b.className = "opt";
-    b.textContent = opt.name;
-    b.onclick = () => pick(opt, b);
+    b.textContent = optionText(country);
+    b.dataset.code = country.code;
+    b.onclick = () => pick(country, b);
     optWrap.appendChild(b);
   });
 
@@ -357,21 +435,21 @@ function renderQuestion() {
 }
 
 function revealCorrect(pickedBtn) {
-  const q = round[idx];
+  const correctCode = round[idx].correct.code;
   document.querySelectorAll(".opt").forEach(b => {
     b.disabled = true;
-    if (b.textContent === q.correct.name) b.classList.add("correct");
+    if (b.dataset.code === correctCode) b.classList.add("correct");
     else if (b === pickedBtn) b.classList.add("wrong");
     else b.classList.add("dim");
   });
 }
 
-function pick(option, btn) {
+function pick(country, btn) {
   if (locked) return;
   locked = true;
   clearTimer();
   revealCorrect(btn);
-  if (option.code === round[idx].correct.code) score++;
+  if (country.code === round[idx].correct.code) score++;
   setTimeout(advance, 1100);
 }
 
@@ -399,29 +477,50 @@ function renderDone() {
     ? '<p class="newbest">🎉 New personal best for this mode!</p>'
     : '<p class="best-line">Best for this mode: ' + best.score + '/' + best.total + '</p>';
 
+  let notesHtml = "";
+  if (gameType === "capital") {
+    const seen = new Set();
+    const notes = [];
+    round.forEach(q => {
+      if (CAPITAL_NOTES[q.correct.code] && !seen.has(q.correct.code)) {
+        seen.add(q.correct.code);
+        notes.push(CAPITAL_NOTES[q.correct.code]);
+      }
+    });
+    if (notes.length) {
+      notesHtml = '<div class="notes"><div class="notes-title">Good to know</div>' +
+        notes.map(n => '<p class="note-item">' + n + '</p>').join("") + '</div>';
+    }
+  }
+
   app.innerHTML =
     '<div class="card">' +
       '<div class="big-emoji">' + rank.emoji + '</div>' +
       '<p class="final-score">' + score + ' / ' + roundLength + '</p>' +
       '<p class="rank">' + rank.title + '</p>' +
       bestHtml +
-      '<button class="btn" id="againBtn">Play Again</button>' +
+      notesHtml +
+      '<button class="btn start" id="againBtn">Play Again</button>' +
       '<button class="btn secondary" id="shareBtn">Share my score</button>' +
       '<p class="share-note" id="shareNote"></p>' +
+      '<p class="reset-link" id="homeLink">← Choose another challenge</p>' +
     '</div>';
-  document.getElementById("againBtn").onclick = renderStart;
+  document.getElementById("againBtn").onclick = renderSettings;
   document.getElementById("shareBtn").onclick = shareScore;
+  document.getElementById("homeLink").onclick = renderHome;
 }
 
 function shareScore() {
   const rank = getRank(score, roundLength);
-  const choiceLabel = numChoices === "random" ? "random choices" : numChoices + " choices";
-  const settings = roundLength + " flags · " + choiceLabel + " · " + (timeLimit === 0 ? "no timer" : timeLimit + "s");
-  const text = "🌍 Flag Quiz Challenge\nI scored " + score + "/" + roundLength + " — " + rank.title + " " + rank.emoji + "\n(" + settings + ")\nCan you beat me?";
+  let heading;
+  if (gameType === "flag") heading = "🌍 Flag Challenge";
+  else heading = capitalDir === "cap2country" ? "🏛️ Capital Challenge (name the country)" : "🏛️ Capital Challenge (name the capital)";
+  const settings = roundLength + " questions · " + numChoices + " choices · " + (timeLimit === 0 ? "no timer" : timeLimit + "s");
+  const text = heading + "\nI scored " + score + "/" + roundLength + " — " + rank.title + " " + rank.emoji + "\n(" + settings + ")\nCan you beat me?";
   const url = window.location.href;
   const note = document.getElementById("shareNote");
   if (navigator.share) {
-    navigator.share({ title: "Flag Quiz Challenge", text: text, url: url }).catch(() => {});
+    navigator.share({ title: "Quiz Challenge", text: text, url: url }).catch(() => {});
   } else if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text + "\n" + url).then(
       () => { if (note) note.textContent = "Score copied to clipboard!"; },
@@ -432,7 +531,7 @@ function shareScore() {
   }
 }
 
-renderStart();
+renderHome();
 </script>
 </body>
 </html>
