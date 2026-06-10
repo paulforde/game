@@ -164,6 +164,159 @@ const CAPITAL_NOTES = {
   bi: "Burundi: Gitega became the political capital in 2019; Bujumbura remains the economic capital.",
 };
 
+const REGIONS = {
+  gulf: ["qa","ae","bh","kw","om","sa","ye"],
+  levant: ["jo","il","lb","sy","iq"],
+  northAfrica: ["dz","eg","ly","ma","tn","sd","mr"],
+  westAfrica: ["bj","bf","cv","ci","gm","gh","gn","gw","lr","ml","ne","ng","sn","sl","tg"],
+  centralAfrica: ["ao","cm","cf","td","cg","cd","gq","ga","st"],
+  eastAfrica: ["bi","dj","er","et","ke","rw","so","ss","tz","ug"],
+  southernAfrica: ["bw","sz","ls","mw","mz","na","za","zm","zw","mg","mu","sc","km"],
+  westernEurope: ["be","fr","ie","lu","mc","nl","gb","ad","li"],
+  northernEurope: ["dk","ee","fi","is","lv","lt","no","se"],
+  easternEurope: ["at","by","cz","de","hu","md","pl","ro","ru","sk","ua","ch"],
+  southernEurope: ["al","ba","bg","hr","cy","gr","it","mk","mt","me","pt","sm","rs","si","es","va","tr"],
+  caucasusCentralAsia: ["kz","kg","tj","tm","uz","mn","az","am","ge"],
+  southAsia: ["af","bd","bt","in","mv","np","pk","lk","ir"],
+  southeastAsia: ["bn","kh","id","la","my","mm","ph","sg","th","tl","vn"],
+  eastAsia: ["cn","jp","kp","kr"],
+  oceania: ["au","fj","ki","mh","fm","nr","nz","pw","pg","ws","sb","to","tv","vu"],
+  northAmerica: ["ca","us","mx"],
+  centralAmerica: ["bz","cr","sv","gt","hn","ni","pa"],
+  caribbean: ["ag","bs","bb","cu","dm","do","gd","ht","jm","kn","lc","vc","tt"],
+  southAmerica: ["ar","bo","br","cl","co","ec","gy","py","pe","sr","uy","ve"],
+};
+const CODE_REGION = {};
+Object.keys(REGIONS).forEach(r => REGIONS[r].forEach(c => { CODE_REGION[c] = r; }));
+
+// Well-known cities that are NOT capitals, used as plausible same-region decoys.
+const EXTRA_CITIES_BY_REGION = {
+  gulf: ["Dubai","Jeddah","Mecca","Sharjah"],
+  levant: ["Aleppo","Mosul","Basra","Sidon"],
+  northAfrica: ["Casablanca","Alexandria","Marrakesh","Benghazi","Giza"],
+  westAfrica: ["Lagos","Kano","Ibadan","Kumasi","Abidjan"],
+  centralAfrica: ["Douala","Lubumbashi","Pointe-Noire","Mbuji-Mayi"],
+  eastAfrica: ["Mombasa","Dar es Salaam","Zanzibar City","Hargeisa"],
+  southernAfrica: ["Johannesburg","Durban","Bulawayo","Port Elizabeth"],
+  westernEurope: ["Rotterdam","Marseille","Lyon","Antwerp","Manchester","Cork"],
+  northernEurope: ["Gothenburg","Bergen","Tampere","Aarhus","Malmö"],
+  easternEurope: ["Munich","Hamburg","Kraków","Saint Petersburg","Lviv","Zurich","Geneva"],
+  southernEurope: ["Milan","Naples","Barcelona","Porto","Thessaloniki","Seville","Istanbul"],
+  caucasusCentralAsia: ["Almaty","Samarkand","Gyumri","Bukhara"],
+  southAsia: ["Mumbai","Karachi","Lahore","Bangalore","Chittagong","Kolkata","Isfahan"],
+  southeastAsia: ["Ho Chi Minh City","Surabaya","Cebu","Chiang Mai","George Town","Mandalay"],
+  eastAsia: ["Shanghai","Osaka","Busan","Guangzhou","Yokohama","Incheon"],
+  oceania: ["Sydney","Melbourne","Auckland","Brisbane","Perth"],
+  northAmerica: ["New York","Los Angeles","Chicago","Toronto","Vancouver","Guadalajara","Monterrey"],
+  centralAmerica: ["San Pedro Sula","León","Cancún","Colón"],
+  caribbean: ["Montego Bay","Santiago de Cuba","Punta Cana"],
+  southAmerica: ["São Paulo","Rio de Janeiro","Medellín","Guayaquil","Córdoba","Cusco","Valparaíso","Maracaibo"],
+};
+
+function regionPeers(code) {
+  const r = CODE_REGION[code];
+  return COUNTRIES.filter(c => c.code !== code && CODE_REGION[c.code] === r);
+}
+
+// Real cities per country (non-capital). The capital lives in COUNTRIES.
+// Co-official capitals are deliberately omitted so a country's own decoys are never also "correct".
+const CITY_EXTRAS = {
+  af:["Kandahar","Herat","Mazar-i-Sharif"], al:["Durrës","Vlorë"], dz:["Oran","Constantine"],
+  ao:["Huambo","Lobito"], ar:["Córdoba","Rosario","Mendoza"], am:["Gyumri","Vanadzor"],
+  au:["Sydney","Melbourne","Brisbane","Perth"], at:["Graz","Linz","Salzburg"], az:["Ganja","Sumqayit"],
+  bs:["Freeport"], bh:["Riffa","Muharraq"], bd:["Chittagong","Khulna"], by:["Gomel","Mogilev"],
+  be:["Antwerp","Ghent","Bruges"], bz:["Belize City","San Ignacio"], bj:["Cotonou","Parakou"],
+  bt:["Paro","Punakha"], bo:["Santa Cruz","Cochabamba"], ba:["Banja Luka","Mostar","Tuzla"],
+  bw:["Francistown"], br:["São Paulo","Rio de Janeiro","Salvador","Belo Horizonte"], bg:["Plovdiv","Varna"],
+  bf:["Bobo-Dioulasso"], bi:["Bujumbura","Ngozi"], kh:["Siem Reap","Battambang"], cm:["Douala","Bamenda"],
+  ca:["Toronto","Montreal","Vancouver","Calgary"], cv:["Mindelo"], td:["Moundou"],
+  cl:["Valparaíso","Concepción"], cn:["Shanghai","Guangzhou","Shenzhen","Chengdu"], co:["Medellín","Cali","Barranquilla"],
+  cg:["Pointe-Noire"], cd:["Lubumbashi","Mbuji-Mayi","Goma"], cr:["Limón","Alajuela"], ci:["Abidjan","Bouaké"],
+  hr:["Split","Rijeka","Zadar"], cu:["Santiago de Cuba","Camagüey"], cy:["Limassol","Larnaca"],
+  cz:["Brno","Ostrava"], dk:["Aarhus","Odense","Aalborg"], do:["Santiago","Punta Cana"],
+  ec:["Guayaquil","Cuenca"], eg:["Alexandria","Giza","Luxor"], sv:["Santa Ana","San Miguel"],
+  gq:["Bata"], er:["Keren","Massawa"], ee:["Tartu","Narva"], sz:["Manzini"], et:["Dire Dawa","Mekelle"],
+  fj:["Nadi","Lautoka"], fi:["Tampere","Turku","Espoo"], fr:["Marseille","Lyon","Toulouse","Nice"],
+  ga:["Port-Gentil"], gm:["Serekunda"], ge:["Batumi","Kutaisi"], de:["Munich","Hamburg","Cologne","Frankfurt"],
+  gh:["Kumasi","Tamale"], gr:["Thessaloniki","Patras"], gt:["Quetzaltenango","Antigua"],
+  gn:["Kankan","Nzérékoré"], ht:["Cap-Haïtien"], hn:["San Pedro Sula","La Ceiba"], hu:["Debrecen","Szeged"],
+  is:["Akureyri","Kópavogur"], in:["Mumbai","Bangalore","Kolkata","Chennai"], id:["Surabaya","Bandung","Medan"],
+  ir:["Isfahan","Mashhad","Shiraz","Tabriz"], iq:["Basra","Mosul","Erbil"], ie:["Cork","Galway","Limerick"],
+  il:["Tel Aviv","Haifa"], it:["Milan","Naples","Turin","Florence"], jm:["Montego Bay","Spanish Town"],
+  jp:["Osaka","Yokohama","Kyoto","Nagoya"], jo:["Zarqa","Irbid"], kz:["Almaty","Shymkent"],
+  ke:["Mombasa","Kisumu"], kw:["Hawalli","Jahra"], kg:["Osh"], la:["Luang Prabang","Pakse"],
+  lv:["Daugavpils","Liepāja"], lb:["Tripoli","Sidon"], ly:["Benghazi","Misrata"], lt:["Kaunas","Klaipėda"],
+  lu:["Esch-sur-Alzette"], mg:["Toamasina","Antsirabe"], mw:["Blantyre","Mzuzu"],
+  my:["George Town","Johor Bahru","Ipoh"], ml:["Sikasso","Mopti"], mr:["Nouadhibou"],
+  mx:["Guadalajara","Monterrey","Puebla","Cancún"], md:["Tiraspol","Bălți"], mn:["Erdenet"],
+  ma:["Casablanca","Marrakesh","Fez","Tangier"], mz:["Beira","Nampula"], mm:["Yangon","Mandalay"],
+  na:["Swakopmund","Walvis Bay"], np:["Pokhara","Lalitpur"], nl:["Rotterdam","Utrecht","Eindhoven"],
+  nz:["Auckland","Christchurch","Hamilton"], ni:["León","Masaya"], ne:["Zinder","Maradi"],
+  ng:["Lagos","Kano","Ibadan","Port Harcourt"], kp:["Hamhung","Chongjin"], mk:["Bitola"],
+  no:["Bergen","Trondheim","Stavanger"], om:["Salalah","Sohar"], pk:["Karachi","Lahore","Faisalabad"],
+  pa:["Colón","David"], py:["Ciudad del Este"], pe:["Arequipa","Trujillo","Cusco"],
+  ph:["Cebu","Davao","Quezon City"], pl:["Kraków","Łódź","Wrocław","Gdańsk"], pt:["Porto","Braga","Coimbra"],
+  qa:["Al Rayyan","Al Wakrah"], ro:["Cluj-Napoca","Timișoara","Iași"], ru:["Saint Petersburg","Novosibirsk","Yekaterinburg"],
+  rw:["Butare"], sa:["Jeddah","Mecca","Medina","Dammam"], sn:["Touba","Thiès"], rs:["Novi Sad","Niš"],
+  sl:["Bo","Kenema"], sk:["Košice"], si:["Maribor"], so:["Hargeisa","Kismayo"],
+  za:["Johannesburg","Durban","Port Elizabeth"], kr:["Busan","Incheon","Daegu"], ss:["Malakal","Wau"],
+  es:["Barcelona","Valencia","Seville","Bilbao"], lk:["Colombo","Kandy","Galle"], sd:["Omdurman","Port Sudan"],
+  se:["Gothenburg","Malmö","Uppsala"], ch:["Zurich","Geneva","Basel"], sy:["Aleppo","Homs","Latakia"],
+  tj:["Khujand"], tz:["Dar es Salaam","Mwanza","Arusha"], th:["Chiang Mai","Phuket","Pattaya"],
+  tg:["Sokodé"], tt:["San Fernando","Chaguanas"], tn:["Sfax","Sousse"], tr:["Istanbul","Izmir","Antalya","Bursa"],
+  tm:["Türkmenabat"], ug:["Gulu","Jinja"], ua:["Kharkiv","Odesa","Lviv","Dnipro"], ae:["Dubai","Sharjah","Al Ain"],
+  gb:["Manchester","Birmingham","Glasgow","Liverpool"], us:["New York","Los Angeles","Chicago","Houston","Miami"],
+  uy:["Salto"], uz:["Samarkand","Bukhara"], ve:["Maracaibo","Valencia","Barquisimeto"],
+  vn:["Ho Chi Minh City","Da Nang","Hai Phong"], ye:["Aden","Taiz"], zm:["Ndola","Kitwe"], zw:["Bulawayo","Mutare"],
+};
+
+const NEIGHBOURS = {
+  af:["ir","pk","tm","uz","tj","cn"], al:["me","mk","gr","rs"], dz:["ma","tn","ly","ne","ml","mr"],
+  ao:["cd","cg","zm","na"], ar:["cl","bo","py","br","uy"], am:["ge","az","ir","tr"],
+  au:["nz","id","pg"], at:["de","cz","sk","hu","si","it","ch","li"], az:["ge","am","ir","ru","tr"],
+  bd:["in","mm"], be:["fr","nl","de","lu"], bj:["tg","ng","ne","bf"], bo:["br","py","ar","cl","pe"],
+  ba:["hr","rs","me"], bw:["za","na","zm","zw"], br:["ar","uy","py","bo","pe","co","ve","gy","sr"],
+  bg:["ro","rs","mk","gr","tr"], bf:["ml","ne","bj","tg","gh","ci"], bi:["rw","cd","tz"],
+  kh:["th","la","vn"], cm:["ng","td","cf","cg","ga","gq"], ca:["us"], td:["ly","sd","cf","cm","ng","ne"],
+  cl:["pe","bo","ar"], cn:["ru","mn","kp","vn","la","mm","in","bt","np","pk","af","tj","kg","kz"],
+  co:["ve","br","pe","ec","pa"], cg:["ga","cm","cf","cd","ao"], cd:["cg","cf","ss","ug","rw","bi","tz","zm","ao"],
+  cr:["ni","pa"], ci:["lr","gn","ml","bf","gh"], hr:["si","hu","rs","ba","me"], cu:["us","jm","ht","bs"],
+  cz:["de","pl","sk","at"], dk:["de"], do:["ht"], ec:["co","pe"], eg:["ly","sd","il"], sv:["gt","hn"],
+  gq:["cm","ga"], er:["sd","et","dj"], ee:["lv","ru"], sz:["za","mz"], et:["er","dj","so","ke","ss","sd"],
+  fi:["se","no","ru"], fr:["be","lu","de","ch","it","es","ad","mc"], ga:["gq","cm","cg"], gm:["sn"],
+  ge:["ru","az","am","tr"], de:["dk","pl","cz","at","ch","fr","lu","be","nl"], gh:["ci","bf","tg"],
+  gr:["al","mk","bg","tr"], gt:["mx","bz","sv","hn"], gn:["gw","sn","ml","ci","lr","sl"], gw:["sn","gn"],
+  gy:["ve","br","sr"], ht:["do"], hn:["gt","sv","ni"], hu:["at","sk","ua","ro","rs","hr","si"],
+  in:["pk","cn","np","bt","bd","mm"], id:["my","pg","tl"], ir:["iq","tr","am","az","tm","af","pk"],
+  iq:["ir","tr","sy","jo","sa","kw"], ie:["gb"], il:["lb","sy","jo","eg"], it:["fr","ch","at","si","sm","va"],
+  jp:["kr","cn","ru"], jo:["sy","iq","sa","il"], kz:["ru","cn","kg","uz","tm"], ke:["et","so","ss","ug","tz"],
+  kw:["iq","sa"], kg:["kz","uz","tj","cn"], la:["cn","mm","th","kh","vn"], lv:["ee","lt","ru","by"],
+  lb:["sy","il"], ls:["za"], lr:["sl","gn","ci"], ly:["tn","dz","ne","td","sd","eg"], li:["ch","at"],
+  lt:["lv","by","pl","ru"], lu:["be","fr","de"], mg:["mz","mu","km"], mw:["tz","mz","zm"], my:["th","id","bn"],
+  ml:["dz","ne","bf","ci","gn","sn","mr"], mr:["dz","ml","sn"], mx:["us","gt","bz"], md:["ro","ua"], mc:["fr"],
+  mn:["ru","cn"], me:["hr","ba","rs","al"], ma:["dz","mr","es"], mz:["za","sz","zw","zm","mw","tz"],
+  mm:["bd","in","cn","la","th"], na:["ao","zm","bw","za"], np:["in","cn"], nl:["de","be"], nz:["au"],
+  ni:["hn","cr"], ne:["dz","ly","td","ng","bj","bf","ml"], ng:["bj","ne","td","cm"], kp:["cn","ru","kr"],
+  mk:["rs","bg","gr","al"], no:["se","fi","ru"], om:["ae","sa","ye"], pk:["ir","af","cn","in"],
+  pa:["cr","co"], pg:["id"], py:["bo","br","ar"], pe:["ec","co","br","bo","cl"], ph:["id","my","vn"],
+  pl:["de","cz","sk","ua","by","lt","ru"], pt:["es"], qa:["sa","ae"], ro:["hu","ua","md","bg","rs"],
+  ru:["no","fi","ee","lv","lt","by","ua","ge","az","kz","cn","mn","kp","pl"], rw:["ug","cd","bi","tz"],
+  sa:["jo","iq","kw","qa","ae","om","ye"], sn:["mr","ml","gn","gw","gm"], rs:["hu","ro","bg","mk","al","me","ba","hr"],
+  sl:["gn","lr"], sk:["cz","pl","ua","hu","at"], si:["it","at","hu","hr"], so:["et","ke","dj"],
+  za:["na","bw","zw","mz","sz","ls"], kr:["kp"], ss:["sd","et","ke","ug","cd","cf"], es:["fr","pt","ad","ma"],
+  lk:["in","mv"], sd:["eg","ly","td","cf","ss","et","er"], sr:["gy","br"], se:["no","fi"],
+  ch:["de","fr","it","at","li"], sy:["tr","iq","jo","il","lb"], tj:["af","uz","kg","cn"],
+  tz:["ke","ug","rw","bi","cd","zm","mw","mz"], th:["mm","la","kh","my"], tl:["id"], tg:["gh","bf","bj"],
+  tt:["ve"], tn:["dz","ly"], tr:["gr","bg","ge","am","az","ir","iq","sy"], tm:["kz","uz","af","ir"],
+  ug:["ss","ke","tz","rw","cd"], ua:["ru","by","pl","sk","hu","ro","md"], ae:["sa","om","qa"], gb:["ie"],
+  us:["ca","mx"], uy:["br","ar"], uz:["kz","kg","tj","af","tm"], ve:["co","br","gy"], vn:["cn","la","kh"],
+  ye:["sa","om"], zm:["cd","tz","mw","mz","zw","bw","na","ao"], zw:["za","bw","zm","mz"],
+  ad:["fr","es"], bh:["sa","qa"], sg:["my","id"], bn:["my"],
+};
+
+const BY_CODE = {};
+COUNTRIES.forEach(c => { BY_CODE[c.code] = c; });
+
 const LOOKALIKE_GROUPS = [
   ["td","ro","ad","md"], ["id","mc","pl"], ["nl","lu","ru"], ["si","sk","rs","ru"],
   ["ie","ci","it","mx"], ["no","is","dk","se","fi"], ["co","ec","ve"], ["ae","kw","jo","sd"],
@@ -229,23 +382,66 @@ function shuffle(arr) {
   return a;
 }
 
+function citiesOf(c) { return [c.capital].concat(CITY_EXTRAS[c.code] || []); }
+
 function buildRound(length, choices, game) {
   const picks = shuffle(COUNTRIES).slice(0, length);
   return picks.map(correct => {
     const decoyCount = choices - 1;
-    let decoys = [];
+    let promptType, promptValue, options;
+
     if (game === "flag") {
+      promptType = "flag"; promptValue = correct.code;
+      let decoys = [];
       const groups = GROUPS_BY_CODE[correct.code];
       if (groups && Math.random() < LOOKALIKE_CHANCE) {
         const group = groups[Math.floor(Math.random() * groups.length)];
         decoys = shuffle(COUNTRIES.filter(c => c.code !== correct.code && group.includes(c.code))).slice(0, decoyCount);
       }
+      if (decoys.length < decoyCount) {
+        const used = new Set([correct.code, ...decoys.map(d => d.code)]);
+        decoys = decoys.concat(shuffle(COUNTRIES.filter(c => !used.has(c.code))).slice(0, decoyCount - decoys.length));
+      }
+      options = [{ label: correct.name, correct: true }]
+        .concat(decoys.map(c => ({ label: c.name, correct: false })));
+
+    } else if (capitalDir === "cap2country") {
+      // Show the capital, pick the country — decoys mix neighbours + regional countries.
+      promptType = "text"; promptValue = correct.capital;
+      let codes = (NEIGHBOURS[correct.code] || []).concat(regionPeers(correct.code).map(c => c.code));
+      codes = codes.filter((v, i, a) => v !== correct.code && a.indexOf(v) === i);
+      let peers = shuffle(codes).slice(0, decoyCount).map(code => BY_CODE[code]).filter(Boolean);
+      if (peers.length < decoyCount) {
+        const used = new Set([correct.code, ...peers.map(p => p.code)]);
+        peers = peers.concat(shuffle(COUNTRIES.filter(c => !used.has(c.code))).slice(0, decoyCount - peers.length));
+      }
+      options = [{ label: correct.name, correct: true }]
+        .concat(peers.map(c => ({ label: c.name, correct: false })));
+
+    } else {
+      // Show the country, pick the capital — decoys mix the country's own cities,
+      // neighbours' cities & capitals, and regional cities & capitals (randomised each time).
+      promptType = "text"; promptValue = correct.name;
+      const region = CODE_REGION[correct.code];
+      let pool = [];
+      pool = pool.concat(CITY_EXTRAS[correct.code] || []);
+      (NEIGHBOURS[correct.code] || []).forEach(nc => { if (BY_CODE[nc]) pool = pool.concat(citiesOf(BY_CODE[nc])); });
+      pool = pool.concat(regionPeers(correct.code).map(c => c.capital));
+      pool = pool.concat(EXTRA_CITIES_BY_REGION[region] || []);
+      pool = pool.filter(l => l && l !== correct.capital);
+      const seen = new Set();
+      pool = pool.filter(l => seen.has(l) ? false : (seen.add(l), true));
+      let decoys = shuffle(pool).slice(0, decoyCount);
+      if (decoys.length < decoyCount) {
+        const used = new Set([correct.capital, ...decoys]);
+        const more = shuffle(COUNTRIES.filter(c => c.code !== correct.code).map(c => c.capital)).filter(cap => !used.has(cap));
+        decoys = decoys.concat(more.slice(0, decoyCount - decoys.length));
+      }
+      options = [{ label: correct.capital, correct: true }]
+        .concat(decoys.map(l => ({ label: l, correct: false })));
     }
-    if (decoys.length < decoyCount) {
-      const used = new Set([correct.code, ...decoys.map(d => d.code)]);
-      decoys = decoys.concat(shuffle(COUNTRIES.filter(c => !used.has(c.code))).slice(0, decoyCount - decoys.length));
-    }
-    return { correct, countries: shuffle([correct, ...decoys]) };
+
+    return { code: correct.code, promptType, promptValue, options: shuffle(options) };
   });
 }
 
@@ -399,13 +595,9 @@ function renderQuestion() {
   const timerHtml = timeLimit > 0
     ? '<div class="timer-wrap"><div class="timer-bar"><div id="timerFill"></div></div><span class="timer-num" id="timerNum">' + timeLimit + 's</span></div>'
     : '';
-  let promptArea;
-  if (gameType === "flag") {
-    promptArea = '<div class="flag-box" id="flagBox"></div>';
-  } else {
-    const big = capitalDir === "cap2country" ? q.correct.capital : q.correct.name;
-    promptArea = '<div class="prompt-box">' + big + '</div>';
-  }
+  const promptArea = q.promptType === "flag"
+    ? '<div class="flag-box" id="flagBox"></div>'
+    : '<div class="prompt-box">' + q.promptValue + '</div>';
   app.innerHTML =
     '<div class="card">' +
       '<div class="topbar">' +
@@ -419,15 +611,15 @@ function renderQuestion() {
       '<div class="options" id="options"></div>' +
     '</div>';
 
-  if (gameType === "flag") document.getElementById("flagBox").appendChild(makeFlag(q.correct.code));
+  if (q.promptType === "flag") document.getElementById("flagBox").appendChild(makeFlag(q.promptValue));
 
   const optWrap = document.getElementById("options");
-  q.countries.forEach(country => {
+  q.options.forEach(opt => {
     const b = document.createElement("button");
     b.className = "opt";
-    b.textContent = optionText(country);
-    b.dataset.code = country.code;
-    b.onclick = () => pick(country, b);
+    b.textContent = opt.label;
+    if (opt.correct) b.dataset.correct = "1";
+    b.onclick = () => pick(opt, b);
     optWrap.appendChild(b);
   });
 
@@ -435,21 +627,20 @@ function renderQuestion() {
 }
 
 function revealCorrect(pickedBtn) {
-  const correctCode = round[idx].correct.code;
   document.querySelectorAll(".opt").forEach(b => {
     b.disabled = true;
-    if (b.dataset.code === correctCode) b.classList.add("correct");
+    if (b.dataset.correct === "1") b.classList.add("correct");
     else if (b === pickedBtn) b.classList.add("wrong");
     else b.classList.add("dim");
   });
 }
 
-function pick(country, btn) {
+function pick(opt, btn) {
   if (locked) return;
   locked = true;
   clearTimer();
   revealCorrect(btn);
-  if (country.code === round[idx].correct.code) score++;
+  if (opt.correct) score++;
   setTimeout(advance, 1100);
 }
 
@@ -482,9 +673,9 @@ function renderDone() {
     const seen = new Set();
     const notes = [];
     round.forEach(q => {
-      if (CAPITAL_NOTES[q.correct.code] && !seen.has(q.correct.code)) {
-        seen.add(q.correct.code);
-        notes.push(CAPITAL_NOTES[q.correct.code]);
+      if (CAPITAL_NOTES[q.code] && !seen.has(q.code)) {
+        seen.add(q.code);
+        notes.push(CAPITAL_NOTES[q.code]);
       }
     });
     if (notes.length) {
