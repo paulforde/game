@@ -1,0 +1,14 @@
+{
+  "name": "Quiz Challenge",
+  "short_name": "Quiz",
+  "description": "Flags & capitals quiz game",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eff6ff",
+  "theme_color": "#3b82f6",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
